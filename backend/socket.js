@@ -2,7 +2,10 @@ import { Server } from "socket.io";
 import Note from "./models/note.model.js";
 import NoteVersion from "./models/noteVersion.model.js";
 
-const AUTO_SAVE_INTERVAL = parseInt(process.env.AUTO_SAVE_INTERVAL_MS || "5000", 10);
+const AUTO_SAVE_INTERVAL = parseInt(
+  process.env.AUTO_SAVE_INTERVAL_MS || "5000",
+  10
+);
 
 // Track intervals per note
 const autoSaveIntervals = new Map();
@@ -10,17 +13,18 @@ const autoSaveIntervals = new Map();
 const cursorPositions = new Map();
 
 export default function createSocketServer(httpServer) {
+  const allowedOrigins = ["http://localhost:5173", process.env.CLIENT_URL];
   const io = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_URL || "http://localhost:5173",
+      origin: allowedOrigins,
       methods: ["GET", "POST"],
       credentials: true,
-      transports: ['websocket', 'polling']
+      transports: ["websocket", "polling"],
     },
-    allowEIO3: true
+    allowEIO3: true,
   });
 
-  // Map<noteId, Map<socketId, {name, joinedAt}>>
+
   const activeMap = new Map();
 
   io.on("connection", (socket) => {
@@ -56,7 +60,7 @@ export default function createSocketServer(httpServer) {
       users.set(socket.id, {
         id: socket.id,
         name: socket.data.userName,
-        joinedAt: new Date()
+        joinedAt: new Date(),
       });
 
       // send current note content to the new user
@@ -66,13 +70,13 @@ export default function createSocketServer(httpServer) {
           .sort({ createdAt: -1 })
           .limit(20)
           .lean();
-        
+
         if (note) {
           socket.emit("note_loaded", {
             noteId,
             content: note.content,
             updatedAt: note.updatedAt,
-            versions
+            versions,
           });
         }
       } catch (err) {
@@ -97,9 +101,9 @@ export default function createSocketServer(httpServer) {
         // Update note in DB
         const updatedNote = await Note.findByIdAndUpdate(
           noteId,
-          { 
+          {
             content,
-            updatedAt: new Date()
+            updatedAt: new Date(),
           },
           { new: true }
         );
@@ -112,7 +116,7 @@ export default function createSocketServer(httpServer) {
         await NoteVersion.create({
           noteId: updatedNote._id,
           content,
-          meta: { socketUpdate: true, userId: socket.id }
+          meta: { socketUpdate: true, userId: socket.id },
         });
 
         // Get updated versions list
@@ -125,12 +129,11 @@ export default function createSocketServer(httpServer) {
         socket.to(noteId).emit("note_update_broadcast", {
           noteId,
           content,
-          updatedAt: updatedNote.updatedAt
+          updatedAt: updatedNote.updatedAt,
         });
 
         // Send versions update to all in room
         io.in(noteId).emit("versions_updated", { versions });
-
       } catch (err) {
         console.error("Note update error:", err);
         socket.emit("error", { message: "Failed to update note" });
@@ -146,7 +149,7 @@ export default function createSocketServer(httpServer) {
         cursorPosition,
         selection,
         userName: socket.data.userName,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
 
       // Broadcast to others in the same room
@@ -154,13 +157,13 @@ export default function createSocketServer(httpServer) {
         userId: socket.id,
         cursorPosition,
         selection,
-        userName: socket.data.userName
+        userName: socket.data.userName,
       });
     });
 
     socket.on("disconnect", () => {
       const noteId = socket.data.noteId;
-      
+
       // Broadcast cursor leave
       if (noteId) {
         socket.to(noteId).emit("cursor_leave", { userId: socket.id });
@@ -209,7 +212,7 @@ function broadcastActiveUsers(io, noteId, activeMap) {
 function startAutoSaveForNote(io, noteId, activeMap, autoSaveIntervals) {
   const interval = setInterval(async () => {
     const users = activeMap.get(noteId);
-    
+
     // Stop if no users
     if (!users || users.size === 0) {
       clearInterval(interval);
@@ -224,24 +227,24 @@ function startAutoSaveForNote(io, noteId, activeMap, autoSaveIntervals) {
         await NoteVersion.create({
           noteId: note._id,
           content: note.content,
-          meta: { autoSave: true }
+          meta: { autoSave: true },
         });
-        
+
         // Get updated versions
         const versions = await NoteVersion.find({ noteId })
           .sort({ createdAt: -1 })
           .limit(20)
           .lean();
-        
+
         // Notify clients about autosave
         io.in(noteId).emit("autosave", {
           noteId,
-          updatedAt: note.updatedAt
+          updatedAt: note.updatedAt,
         });
-        
+
         // Send updated versions
         io.in(noteId).emit("versions_updated", { versions });
-        
+
         console.log(`Auto-saved version for note: ${noteId}`);
       }
     } catch (err) {
