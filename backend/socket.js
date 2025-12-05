@@ -12,7 +12,7 @@ const cursorPositions = new Map();
 export default function createSocketServer(httpServer) {
   const io = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_URL || "http://localhost:3000",
+      origin: process.env.CLIENT_URL || "http://localhost:5173",
       methods: ["GET", "POST"],
       credentials: true,
       transports: ['websocket', 'polling']

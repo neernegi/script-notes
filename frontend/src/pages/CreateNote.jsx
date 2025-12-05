@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { createNote } from "../api/notesApi";
+import { useNavigate } from "react-router-dom";
 
 export default function CreateNote() {
   const [title, setTitle] = useState("");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
-
+  const navigate = useNavigate();
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!title.trim()) return setError("Title is required");
@@ -15,8 +16,7 @@ export default function CreateNote() {
 
     try {
       const note = await createNote({ title: title.trim() });
-      // Use navigate instead of window.location for better SPA experience
-      window.location.href = `/note/${note._id}`;
+      navigate(`/note/${note._id}`);
     } catch (err) {
       setError(err.message || "Failed to create note");
       setCreating(false);

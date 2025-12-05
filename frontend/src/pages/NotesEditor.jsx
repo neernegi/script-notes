@@ -7,6 +7,7 @@ import CursorPresence from "../components/CursorPresence";
 import Notification from "../components/Notification";
 import ActiveUsers from "../components/ActiveUser";
 import { stringToColor } from "../utils/helperFunctions";
+import { useNavigate } from "react-router-dom";
 
 export default function NoteEditor() {
   const { id } = useParams();
@@ -32,6 +33,7 @@ export default function NoteEditor() {
   const [notification, setNotification] = useState(null);
   const hasLoaded = useRef(false);
   const socketInitialized = useRef(false);
+  const navigate = useNavigate();
 
   // Load note only once when ID changes
   useEffect(() => {
@@ -101,7 +103,7 @@ export default function NoteEditor() {
       <div className="error-container">
         <h3>Error</h3>
         <p>{error}</p>
-        <button onClick={() => (window.location.href = "/")}>Go Home</button>
+        <button onClick={() => navigate("/")}>Go Home</button>
       </div>
     );
   }
@@ -110,9 +112,7 @@ export default function NoteEditor() {
     return (
       <div className="not-found">
         <h3>Note not found</h3>
-        <button onClick={() => (window.location.href = "/")}>
-          Create New Note
-        </button>
+        <button onClick={() => navigate("/")}>Create New Note</button>
       </div>
     );
   }
