@@ -7,7 +7,7 @@ import { connectDB } from "./config/db.js";
 
 connectDB();
 
-const allowedOrigins = ["http://localhost:5173", process.env.CLIENT_URL];
+const allowedOrigins = [process.env.CLIENT_URL,"http://localhost:5173"];
 
 const app = express();
 app.use(

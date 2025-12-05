@@ -13,7 +13,7 @@ const autoSaveIntervals = new Map();
 const cursorPositions = new Map();
 
 export default function createSocketServer(httpServer) {
-  const allowedOrigins = ["http://localhost:5173", process.env.CLIENT_URL];
+  const allowedOrigins = [process.env.CLIENT_URL,"http://localhost:5173"];
   const io = new Server(httpServer, {
     cors: {
       origin: allowedOrigins,
