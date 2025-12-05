@@ -107,7 +107,7 @@ export const NotesProvider = ({ children }) => {
     const selection = {
       start: e.target.selectionStart,
       end: e.target.selectionEnd,
-      height: e.target.offsetHeight / 20 // Approximate line height
+      height: e.target.offsetHeight / 20
     };
     
     sendCursorPosition(cursorPosition, selection);

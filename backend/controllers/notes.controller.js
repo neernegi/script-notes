@@ -1,24 +1,22 @@
 import Note from "../models/note.model.js";
 import NoteVersion from "../models/noteVersion.model.js";
 
-/**
- * Create new note
- */
+// Create new note
 export async function createNote(req, res, next) {
   try {
     const { title } = req.body;
     if (!title || !title.trim()) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: "Title is required" 
+        message: "Title is required",
       });
     }
-    
-    const note = await Note.create({ 
+
+    const note = await Note.create({
       title: title.trim(),
-      content: ""
+      content: "",
     });
-    
+
     return res.status(201).json({
       success: true,
       message: "Note successfully created",
@@ -29,28 +27,26 @@ export async function createNote(req, res, next) {
   }
 }
 
-/**
- * Get note by ID
- */
+//  Get note by ID
 export async function getNoteById(req, res, next) {
   try {
     const { id } = req.params;
-    
+
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid note ID format"
+        message: "Invalid note ID format",
       });
     }
 
     const note = await Note.findById(id);
     if (!note) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         success: false,
-        message: "Note not found" 
+        message: "Note not found",
       });
     }
-    
+
     // Fetch latest versions
     const versions = await NoteVersion.find({ noteId: note._id })
       .sort({ createdAt: -1 })
@@ -68,9 +64,7 @@ export async function getNoteById(req, res, next) {
   }
 }
 
-/**
- * Update note content (fallback for socket updates)
- */
+// Update note content (fallback for socket updates)
 export async function updateNote(req, res, next) {
   try {
     const { id } = req.params;
@@ -79,15 +73,15 @@ export async function updateNote(req, res, next) {
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid note ID format"
+        message: "Invalid note ID format",
       });
     }
 
     const note = await Note.findById(id);
     if (!note) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         success: false,
-        message: "Note not found" 
+        message: "Note not found",
       });
     }
 
@@ -100,7 +94,7 @@ export async function updateNote(req, res, next) {
     await NoteVersion.create({
       noteId: note._id,
       content: note.content,
-      meta: { apiUpdate: true }
+      meta: { apiUpdate: true },
     });
 
     // Get updated versions
@@ -110,10 +104,10 @@ export async function updateNote(req, res, next) {
       .select("content createdAt meta")
       .lean();
 
-    return res.status(200).json({ 
-      success: true, 
-      message: "Note updated successfully", 
-      data: { note, versions }
+    return res.status(200).json({
+      success: true,
+      message: "Note updated successfully",
+      data: { note, versions },
     });
   } catch (err) {
     next(err);
