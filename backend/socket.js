@@ -9,11 +9,9 @@ const AUTO_SAVE_INTERVAL = parseInt(
 
 // Track intervals per note
 const autoSaveIntervals = new Map();
-// Track cursor positions per user
-const cursorPositions = new Map();
 
 export default function createSocketServer(httpServer) {
-  const allowedOrigins = [process.env.CLIENT_URL,"http://localhost:5173"];
+  const allowedOrigins = [process.env.CLIENT_URL, "http://localhost:5173"];
   const io = new Server(httpServer, {
     cors: {
       origin: allowedOrigins,
@@ -23,7 +21,6 @@ export default function createSocketServer(httpServer) {
     },
     allowEIO3: true,
   });
-
 
   const activeMap = new Map();
 
@@ -140,35 +137,8 @@ export default function createSocketServer(httpServer) {
       }
     });
 
-    socket.on("cursor_update", ({ cursorPosition, selection, noteId }) => {
-      if (!noteId) return;
-
-      // Store cursor position
-      cursorPositions.set(socket.id, {
-        userId: socket.id,
-        cursorPosition,
-        selection,
-        userName: socket.data.userName,
-        updatedAt: new Date(),
-      });
-
-      // Broadcast to others in the same room
-      socket.to(noteId).emit("cursor_update", {
-        userId: socket.id,
-        cursorPosition,
-        selection,
-        userName: socket.data.userName,
-      });
-    });
-
     socket.on("disconnect", () => {
       const noteId = socket.data.noteId;
-
-      // Broadcast cursor leave
-      if (noteId) {
-        socket.to(noteId).emit("cursor_leave", { userId: socket.id });
-        cursorPositions.delete(socket.id);
-      }
 
       if (!noteId) {
         console.log("Socket disconnected:", socket.id);

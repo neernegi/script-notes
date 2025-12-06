@@ -3,10 +3,8 @@ import { useParams } from "react-router-dom";
 import { useNotes } from "../context/NotesContext";
 import RichTextEditor from "../components/RichTextEditor";
 import VersionHistory from "../components/VersionHistory";
-import CursorPresence from "../components/CursorPresence";
 import Notification from "../components/Notification";
 import ActiveUsers from "../components/ActiveUser";
-import { stringToColor } from "../utils/helperFunctions";
 import { useNavigate } from "react-router-dom";
 
 export default function NoteEditor() {
@@ -21,13 +19,10 @@ export default function NoteEditor() {
     error,
     socketConnected,
     socket,
-    textareaRef,
     loadNote,
     connectSocket,
     handleContentChange,
-    handleTextareaCursor,
     saveNote,
-    restoreVersion,
   } = useNotes();
 
   const [notification, setNotification] = useState(null);
@@ -174,14 +169,9 @@ export default function NoteEditor() {
               onChange={(value) => handleContentChange(id, value)}
               disabled={!socketConnected}
             />
-            <CursorPresence users={users} noteId={id} socket={socket} />
           </div>
 
-          <VersionHistory
-            noteId={id}
-            versions={versions}
-            onRestore={restoreVersion}
-          />
+          <VersionHistory noteId={id} versions={versions} />
 
           {!socketConnected && (
             <div className="disconnected-warning">
@@ -192,51 +182,6 @@ export default function NoteEditor() {
 
         <aside className="editor-side">
           <ActiveUsers users={users} />
-
-          <div className="stats-box">
-            <h4>📊 Note Statistics</h4>
-            <div className="stat-item">
-              <span>Characters:</span>
-              <span>{content.length}</span>
-            </div>
-            <div className="stat-item">
-              <span>Words:</span>
-              <span>
-                {content.trim() ? content.trim().split(/\s+/).length : 0}
-              </span>
-            </div>
-            <div className="stat-item">
-              <span>Lines:</span>
-              <span>{content.split("\n").length}</span>
-            </div>
-            <div className="stat-item">
-              <span>Active Collaborators:</span>
-              <span>{users.length}</span>
-            </div>
-            <div className="stat-item">
-              <span>Versions Saved:</span>
-              <span>{versions.length}</span>
-            </div>
-          </div>
-
-          <div className="cursor-help">
-            <h4>🖱️ Live Cursors</h4>
-            <p>See where others are typing in real-time!</p>
-            <div className="cursor-examples">
-              {users.slice(0, 3).map((user) => {
-                const color = stringToColor(user.name);
-                return (
-                  <div key={user.id} className="cursor-example">
-                    <div
-                      className="cursor-sample"
-                      style={{ borderLeftColor: color }}
-                    ></div>
-                    <span>{user.name}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
         </aside>
       </div>
     </div>
